@@ -46,7 +46,7 @@ export default function App() {
 
   // Conversational AI (Gemini) states
   const [geminiKey, setGeminiKey] = useState<string>(() => {
-    return localStorage.getItem('GEMINI_API_KEY') || '';
+    return import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('GEMINI_API_KEY') || '';
   });
   const [chatInput, setChatInput] = useState('');
   const [chatHistory, setChatHistory] = useState<Message[]>([
