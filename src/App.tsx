@@ -46,7 +46,16 @@ export default function App() {
 
   // Conversational AI (Gemini) states
   const [geminiKey, setGeminiKey] = useState<string>(() => {
-    return import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('GEMINI_API_KEY') || '';
+    const envKey = (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
+    const localKey = (localStorage.getItem('GEMINI_API_KEY') || '').trim();
+    
+    // Clear corrupted legacy keys that don't match Gemini formats
+    if (localKey && !localKey.startsWith('AIzaSy') && !localKey.startsWith('AQ.')) {
+      localStorage.removeItem('GEMINI_API_KEY');
+      return envKey;
+    }
+    
+    return envKey || localKey;
   });
   const [chatInput, setChatInput] = useState('');
   const [chatHistory, setChatHistory] = useState<Message[]>([
@@ -54,6 +63,11 @@ export default function App() {
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Print diagnostics to browser console safely
+  useEffect(() => {
+    console.log("EcoSense: Loaded API Key prefix:", geminiKey ? geminiKey.slice(0, 10) + "..." : "NONE");
+  }, [geminiKey]);
 
   // Benchmarks
   const nationalBaseline = 1.9; // Indian Avg (tonnes/year)
@@ -155,7 +169,7 @@ export default function App() {
     }
 
     try {
-      const genAI = new GoogleGenerativeAI(geminiKey);
+      const genAI = new GoogleGenerativeAI(geminiKey.trim());
       // Using gemini-1.5-flash for rapid processing
       const model = genAI.getGenerativeModel({
         model: 'gemini-1.5-flash',
